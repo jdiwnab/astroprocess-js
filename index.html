@@ -12,6 +12,9 @@
                 font: 20pt bold;
                 color: #bbb;
             }
+            #drop_zone.hidden {
+                display:none;
+            }
             #progress_bar {
                 margin: 10px 0;
                 padding: 3px;
@@ -31,12 +34,22 @@
                 height: auto;
                 width: 0;
             }
+            #canvas {
+                display: none;
+            }
+            #canvas.show {
+                display: initial;
+            }
         </style>
         <script>
             var canvas, context, reader, img;
             function handleFileSelect(evt) {
                 evt.stopPropagation();
                 evt.preventDefault();
+                var dropzone = document.getElementById('drop_zone');
+                dropzone.className += " hidden";
+                var c = document.getElementById('canvas');
+                c.className += " show";
                 var files = evt.dataTransfer.files;
                 var output = [];
                 
@@ -84,8 +97,8 @@
             }
 
             function handleResize() {
-                context.canvas.width = document.body.clientWidth/2 -16;
-                context.canvas.height= document.body.clientHeight -16;
+                context.canvas.width = document.body.clientWidth -16;
+                context.canvas.height= document.body.clientHeight * (0.75) -16;
                 if(img)
                     updateHist();
             }
@@ -104,9 +117,12 @@
 
             }
             window.onload = function(e) {
-                var dropZone = document.getElementById('canvas');
-                dropZone.addEventListener('dragover', handleDragOver, false);
-                dropZone.addEventListener('drop', handleFileSelect, false);
+                var c = document.getElementById('canvas');
+                c.addEventListener('dragover', handleDragOver, false);
+                c.addEventListener('drop', handleFileSelect, false);
+                var dropzone = document.getElementById('drop_zone');
+                dropzone.addEventListener('dragover', handleDragOver, false);
+                dropzone.addEventListener('drop', handleFileSelect, false);
                 canvas = document.getElementById('canvas');
                 context = canvas.getContext('2d');
                 context.fillStyle = '#ffff';
@@ -118,6 +134,7 @@
         </script>
     </head>
     <body onresize="handleResize()">
+        <div id="drop_zone">Drop an Image</div>
         <canvas id="canvas" width="1024" height="1024"></canvas>
         <span>Red S: </span><input type="range" min="0" max="255" id="r_s" value="0" />
         <span>Red G: </span><input type="range" min="0" max="2" step="0.1" id="r_g" value="1"/>
