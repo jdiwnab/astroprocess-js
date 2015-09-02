@@ -1,7 +1,7 @@
 <html>
     <head>
         <script src="lib/filters.js" type="text/javascript"></script>
-        <title>JS Image Processing</title>
+        <title>Javascript Image Processing</title>
         <style>
 
             #drop_zone {
@@ -34,22 +34,26 @@
                 height: auto;
                 width: 0;
             }
-            #canvas {
+            canvas {
                 display: none;
             }
-            #canvas.show {
-                display: initial;
+            canvas.show {
+                display: inline-block;
+            }
+            .label {
+                width: 60px;
+                display: inline-block;
             }
         </style>
         <script>
-            var canvas, context, reader, img;
+            var input_canvas, output_canvas, input_context, output_context, reader, img;
             function handleFileSelect(evt) {
                 evt.stopPropagation();
                 evt.preventDefault();
                 var dropzone = document.getElementById('drop_zone');
                 dropzone.className += " hidden";
-                var c = document.getElementById('canvas');
-                c.className += " show";
+                input_canvas.className += " show";
+                output_canvas.className += " show";
                 var files = evt.dataTransfer.files;
                 var output = [];
                 
@@ -72,9 +76,9 @@
                 }
             }
             function drawImage(weights) {
-                var scalingFactor = Math.min(canvas.height/img.height, canvas.width/img.width);
-                context.scale(scalingFactor, scalingFactor);
-                context.drawImage(img, 0,0);
+                var scalingFactor = Math.min(input_canvas.height/img.height, input_canvas.width/img.width);
+                input_context.scale(scalingFactor, scalingFactor);
+                input_context.drawImage(img, 0,0);
 
                 //var grayscale = Filters.filterImage(Filters.grayscale, img);
                 /*var sharpen = Filters.filterImage(Filters.convolute, img, 
@@ -82,11 +86,13 @@
                      -1,  5, -1,
                       0, -1,  0]);*/
                 //var gamma = Filters.filterImage(Filters.gamma, img, .5)
-                var hist = Filters.filterImage(Filters.histogram, img, weights);
+                var hist = Filters.filterCanvas(Filters.histogram, input_canvas, weights);
+                //output_context.scale(scalingFactor, scalingFactor);
 
-                context.drawImage(hist,0,0);
+                output_context.putImageData(hist,0,0);
                 
-                context.scale(1/scalingFactor, 1/scalingFactor);
+                input_context.scale(1/scalingFactor, 1/scalingFactor);
+                //output_context.scale(1/scalingFactor, 1/scalingFactor);
 
 
             }
@@ -97,8 +103,10 @@
             }
 
             function handleResize() {
-                context.canvas.width = document.body.clientWidth -16;
-                context.canvas.height= document.body.clientHeight * (0.75) -16;
+                input_canvas.width = document.body.clientWidth * (0.5) -32;
+                input_canvas.height= document.body.clientHeight * (0.75) -16;
+                output_canvas.width = document.body.clientWidth * (0.5) -32
+                output_canvas.height= document.body.clientHeight * (0.75) -16;
                 if(img)
                     updateHist();
             }
@@ -117,16 +125,16 @@
 
             }
             window.onload = function(e) {
-                var c = document.getElementById('canvas');
-                c.addEventListener('dragover', handleDragOver, false);
-                c.addEventListener('drop', handleFileSelect, false);
+                input_canvas = document.getElementById('input');
+                output_canvas = document.getElementById('output');
+                input_context = input_canvas.getContext('2d');
+                output_context = output_canvas.getContext('2d');
+                input_canvas.addEventListener('dragover', handleDragOver, false);
+                input_canvas.addEventListener('drop', handleFileSelect, false);
                 var dropzone = document.getElementById('drop_zone');
                 dropzone.addEventListener('dragover', handleDragOver, false);
                 dropzone.addEventListener('drop', handleFileSelect, false);
-                canvas = document.getElementById('canvas');
-                context = canvas.getContext('2d');
-                context.fillStyle = '#ffff';
-                context.fillRect(0,0,canvas.width, canvas.height);
+
                 handleResize();
                 //progress = document.querySelector('.percent');
             }
@@ -135,16 +143,17 @@
     </head>
     <body onresize="handleResize()">
         <div id="drop_zone">Drop an Image</div>
-        <canvas id="canvas" width="1024" height="1024"></canvas>
-        <span>Red S: </span><input type="range" min="0" max="255" id="r_s" value="0" />
-        <span>Red G: </span><input type="range" min="0" max="2" step="0.1" id="r_g" value="1"/>
-        <span>Red L: </span><input type="range" min="0" max="255" id="r_l" value="0" />
-        <span>Gre S: </span><input type="range" min="0" max="255" id="g_s" value="0" />
-        <span>Red G: </span><input type="range" min="0" max="2" step="0.1" id="g_g" value="1" />
-        <span>Gre L: </span><input type="range" min="0" max="255" id="g_l" value="0" />
-        <span>Blu S: </span><input type="range" min="0" max="255" id="b_s" value="0" />
-        <span>Red G: </span><input type="range" min="0" max="2" step="0.1" id="b_g" value="1" />
-        <span>Blu L: </span><input type="range" min="0" max="255" id="b_l" value="0" />
+        <canvas id="input" width="1024" height="1024"></canvas>
+        <canvas id="output" width="1024" height="1024"></canvas>
+        <div class="label">Red S: </div><input type="range" min="0" max="255" id="r_s" value="0" /><br/>
+        <div class="label">Red G: </div><input type="range" min="0" max="2" step="0.1" id="r_g" value="1"/><br/>
+        <div class="label">Red L: </div><input type="range" min="0" max="255" id="r_l" value="0" /><br/>
+        <div class="label">Gre S: </div><input type="range" min="0" max="255" id="g_s" value="0" /><br/>
+        <div class="label">Red G: </div><input type="range" min="0" max="2" step="0.1" id="g_g" value="1" /><br/>
+        <div class="label">Gre L: </div><input type="range" min="0" max="255" id="g_l" value="0" /><br/>
+        <div class="label">Blu S: </div><input type="range" min="0" max="255" id="b_s" value="0" /><br/>
+        <div class="label">Red G: </div><input type="range" min="0" max="2" step="0.1" id="b_g" value="1" /><br/>
+        <div class="label">Blu L: </div><input type="range" min="0" max="255" id="b_l" value="0" /><br/>
         <button onclick="updateHist()">Update</button>
     </body>
 </html>
